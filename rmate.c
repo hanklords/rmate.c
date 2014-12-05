@@ -28,6 +28,10 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
+
+#include "version.h"
+
 
 #define HOST "localhost"
 #define PORT "52698"
@@ -59,7 +63,7 @@ int connect_mate(const char* host, const char* port) {
 
 	if ((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+		return -1;
 	}
 
 	// loop through all the results and connect to the first we can
@@ -207,7 +211,7 @@ ssize_t handle_line(int sockfd, char* buf, size_t len, struct cmd *cmd_state) {
         if(*buf == '\0')
             goto err;
         
-        if((token_len = strcspn(buf, ":")) >= read_len)
+        if((token_len = strcspn(buf, ":")) >= (size_t) read_len)
             goto err;
             
         cmd_state->state = CMD_VAR;
@@ -246,18 +250,64 @@ ssize_t handle_cmds(int sockfd, char* buf, size_t len, struct cmd *cmd_state) {
     return total_read_len;
 }
 
+void version(void) {
+  char cc[256];
+  time_t tc = COMMIT_DATE;
+
+  strftime(cc, sizeof(cc), "%Y-%m-%d", localtime(&tc));
+  printf("rmate %s (%s)\n", BUILD_VERSION, cc);
+  printf("Copyright (c) 2014 Mael Clerambault\n");
+  exit(0);
+}
+
+void usage(void) {
+  fprintf(stderr, "Usage: rmate [options] file\n");
+  fprintf(stderr, "\nOptions:\n");
+  fprintf(stderr, "  -h\t\tPrint this help\n");
+  fprintf(stderr, "  -v\t\tPrint version informations\n");
+  fprintf(stderr, "  -H HOST\tConnect to host. Defaults to %s.\n", HOST);
+  fprintf(stderr, "  -p PORT\tPort number to use for connection. Defaults to %s.\n", PORT);
+  exit(0);
+}
+
 int main(int argc, char *argv[])
 {
+    int ch;
 	int sockfd, fd, numbytes;
-    char* filename;
+    char *filename;
+    char* host = HOST;
+    char* port = PORT;
     struct cmd cmd_state = {0};
+
+    while ((ch = getopt(argc, argv, "hvH:p:")) != -1) {
+      switch(ch) {
+		case 'H':
+          host = optarg;
+          break;
+    	case 'p':
+          port = optarg;
+          break;
+        case 'v':
+          version();
+          break;
+        case 'h':
+        default:
+          usage();
+          break;
+      }
+    }
+    argc -= optind; 
+    argv += optind;
     
-    if((sockfd = connect_mate(HOST, PORT)) == -1) {
+    if(argc < 1)
+        usage();
+    
+    if((sockfd = connect_mate(host, port)) == -1) {
         fprintf(stderr, "Could not connect\n");
         return -1;
     }
     
-    filename = argv[1];
+    filename = argv[0];
     if((fd = open(filename, O_RDONLY)) == -1) {
         perror("open");
         return -1;
