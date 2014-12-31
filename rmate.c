@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
@@ -252,8 +253,9 @@ void usage(void) {
   fprintf(stderr, "\nOptions:\n");
   fprintf(stderr, "  -h\t\tPrint this help\n");
   fprintf(stderr, "  -v\t\tPrint version informations\n");
-  fprintf(stderr, "  -H HOST\tConnect to host. Defaults to %s.\n", DEFAULT_HOST);
-  fprintf(stderr, "  -p PORT\tPort number to use for connection. Defaults to %s.\n", DEFAULT_PORT);
+  fprintf(stderr, "  -H HOST\tConnect to host. Defaults to $%s or %s.\n", HOST_ENV, DEFAULT_HOST);
+  fprintf(stderr, "  -p PORT\tPort number to use for connection. Defaults to $%s or %s.\n", PORT_ENV, DEFAULT_PORT);
+  fprintf(stderr, "  -w\t\tWait for file to be closed by TextMate.\n");
   exit(0);
 }
 
@@ -264,15 +266,21 @@ int main(int argc, char *argv[])
     char *filename;
     char* host = getenv(HOST_ENV);
     char* port = getenv(PORT_ENV);
+    int need_wait = 0;
     struct cmd cmd_state = {0};
     
     if(!host)
         host = DEFAULT_HOST;
     if(!port)
         port = DEFAULT_PORT;
+    
+    signal(SIGCHLD, SIG_IGN);
 
-    while ((ch = getopt(argc, argv, "hvH:p:")) != -1) {
+    while ((ch = getopt(argc, argv, "whvH:p:")) != -1) {
       switch(ch) {
+        case 'w':
+          need_wait = 1;
+          break;
 		case 'H':
           host = optarg;
           break;
@@ -293,6 +301,9 @@ int main(int argc, char *argv[])
     
     if(argc < 1)
         usage();
+    
+    if(!need_wait && fork() > 0)
+        exit(0);
     
     if((sockfd = connect_mate(host, port)) == -1) {
         fprintf(stderr, "Could not connect\n");
