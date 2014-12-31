@@ -18,8 +18,10 @@
 #include "version.h"
 
 
-#define HOST "localhost"
-#define PORT "52698"
+#define HOST_ENV "RMATE_HOST"
+#define PORT_ENV "RMATE_PORT"
+#define DEFAULT_HOST "localhost"
+#define DEFAULT_PORT "52698"
 
 #define MAXDATASIZE 1024
 
@@ -250,8 +252,8 @@ void usage(void) {
   fprintf(stderr, "\nOptions:\n");
   fprintf(stderr, "  -h\t\tPrint this help\n");
   fprintf(stderr, "  -v\t\tPrint version informations\n");
-  fprintf(stderr, "  -H HOST\tConnect to host. Defaults to %s.\n", HOST);
-  fprintf(stderr, "  -p PORT\tPort number to use for connection. Defaults to %s.\n", PORT);
+  fprintf(stderr, "  -H HOST\tConnect to host. Defaults to %s.\n", DEFAULT_HOST);
+  fprintf(stderr, "  -p PORT\tPort number to use for connection. Defaults to %s.\n", DEFAULT_PORT);
   exit(0);
 }
 
@@ -260,9 +262,14 @@ int main(int argc, char *argv[])
     int ch;
 	int sockfd, fd, numbytes;
     char *filename;
-    char* host = HOST;
-    char* port = PORT;
+    char* host = getenv(HOST_ENV);
+    char* port = getenv(PORT_ENV);
     struct cmd cmd_state = {0};
+    
+    if(!host)
+        host = DEFAULT_HOST;
+    if(!port)
+        port = DEFAULT_PORT;
 
     while ((ch = getopt(argc, argv, "hvH:p:")) != -1) {
       switch(ch) {
