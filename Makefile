@@ -6,7 +6,8 @@ RM ?= rm -f
 
 CFLAGS += -O2 -Wall -Wextra -Wno-missing-field-initializers
 
-PREFIX = ~/bin
+PREFIX ?= /usr/bin
+DESTDIR ?= /
 
 .SUFFIXES:.o
 .c.o:
@@ -26,7 +27,7 @@ clean:
 	$(RM) $(PROGRAM) version.h $(OBJS)
 
 install: $(PROGRAM)
-	install -d $(PREFIX)
-	install $(PROGRAM) $(PREFIX)/$(PROGRAM)
+	install -d $(DESTDIR)/$(PREFIX)
+	install $(PROGRAM) $(DESTDIR)/$(PREFIX)/$(PROGRAM)
 
 .PHONY: clean all
