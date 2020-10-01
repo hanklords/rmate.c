@@ -1,12 +1,12 @@
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <netdb.h>
-#include <fcntl.h>
+#include <limits.h> //Import limit.h header file
+#include <stdio.h>// IMports Stdio header file
+#include <stdlib.h>//Import stlib header file
+#include <ctype.h>//Import ctype header file
+#include <unistd.h>//Import unistd header file
+#include <errno.h>//Import errno header file
+#include <string.h>//Import string header file
+#include <netdb.h>//Import netdb header file
+#include <fcntl.h>//Import fcnt1 header file
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/socket.h>
